@@ -91,6 +91,7 @@ class MongoHash < Hash
       end
     end
     default.delete('_id')
+    default.delete(:_id)    
     default.each{|k,v|
 #      puts [k,v].inspect
       self[k] = v
@@ -100,6 +101,7 @@ class MongoHash < Hash
   end
 
   # Overrides key assignment with mongohash metadata
+  
   def []=(key,value)
     @dirty_keys << key
     @delete_keys -= [key]
@@ -107,12 +109,16 @@ class MongoHash < Hash
   end
 
   # Overrides delete assignment with mongohash metadata
-  def delete(key)
-    @delete_keys << key
-    super
+  
+  def delete(key, mark = true)
+    if mark == true
+      @delete_keys << key
+    end
+    super(key)
   end
 
   # Removes the tied object from the mongo collection
+  
   def destroy()
     unless @new_record == true
       retval = @collection.remove({'_id' => self._id}, :safe => true)
@@ -126,6 +132,7 @@ class MongoHash < Hash
   # if a new record, assigns self._id after success
   # if no keys have been modified, returns immediately
   # attempts to be smart about updating individual keys instead of overwriting entire record
+  
   def save()
     @dirty_keys.uniq!
     @delete_keys.uniq!
@@ -135,9 +142,13 @@ class MongoHash < Hash
       self['created_at'] = Time.now.to_i
       id = @collection.insert(self, :safe => true)
       self._id = id
+      self.delete(:_id, false)
       @new_record = false
     else
       self['updated_at'] = Time.now.to_i
+
+      ## @todo: what if the object with that key doesn't exist in the db when it's saved?
+
       if @subkey == ""
         if (@dirty_keys.length + @delete_keys.length) < self.keys.length / 2
           update_hash = {}
@@ -145,6 +156,7 @@ class MongoHash < Hash
           delete_hash = {}
           @delete_keys.map{|key| delete_hash[key] = 1}
           @collection.update({'_id' => self._id}, {'$unset' => delete_hash, '$set' => update_hash }, :safe => true)           
+          
           retval = true
         else
           retval = @collection.update({'_id' => self._id}, self, :safe => true)
