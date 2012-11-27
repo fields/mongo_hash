@@ -26,6 +26,13 @@ class MongoHash < Hash
     end
   end
 
+  # Main find method to use for searching the mongo collection for a matching object
+  #
+  # @param [Mongo::Collection] the mongo collection object
+  # @param [Hash] the query specifier, in standard mongodb syntax, optional
+  # @param [String] the subkey attribute to base the return on, optional
+  # @return [Array] the list of matching MongoHash objects from the collection
+  
   def self.find(collection, query = {}, subkey = "")
     options_specifier = get_options_specifier(subkey)
     records = collection.find(query, options_specifier)
@@ -37,6 +44,14 @@ class MongoHash < Hash
     mhs
   end
 
+  # Finds matching objects, or creates a blank one if not
+  #
+  # @todo Infer default values from the query specifier
+  # @param [Mongo::Collection] the mongo collection object
+  # @param [Hash] the query specifier, in standard mongodb syntax, optional
+  # @param [String] the subkey attribute to base the return on, optional
+  # @return [Array] the list of matching MongoHash objects from the collection, or an array with a blank MongoHash object if none found
+
   def self.find_or_create(collection, query = {}, subkey = "")
     result = self.find(collection, query, subkey)
     if result == []
@@ -45,6 +60,14 @@ class MongoHash < Hash
       result
     end
   end
+
+  # MongoHash.new creates a new blank object tied to the specified collection or retrieves a specific object
+  #
+  # @param [Mongo::Collection] the mongo collection object
+  # @param [Object] the _id to query the collection for, optional
+  # @param [Hash] the default value to prepopulate into the returned object, optional
+  # @param [String] the subkey attribute to base the return on, optional
+  # @return [MongoHash] a single MongoHash object tied to the specified collection
 
   def initialize(collection, _id = nil, default = {}, subkey = "")
     @subkey = subkey
@@ -75,18 +98,21 @@ class MongoHash < Hash
     @dirty_keys = []
     @delete_keys = []
   end
-  
+
+  # Overrides key assignment with mongohash metadata
   def []=(key,value)
     @dirty_keys << key
     @delete_keys -= [key]
     super
   end
 
+  # Overrides delete assignment with mongohash metadata
   def delete(key)
     @delete_keys << key
     super
   end
 
+  # Removes the tied object from the mongo collection
   def destroy()
     unless @new_record == true
       retval = @collection.remove({'_id' => self._id}, :safe => true)
@@ -95,7 +121,11 @@ class MongoHash < Hash
       ## maybe some other things
     end
   end
-  
+
+  # Persists the tied object to the mongo collection
+  # if a new record, assigns self._id after success
+  # if no keys have been modified, returns immediately
+  # attempts to be smart about updating individual keys instead of overwriting entire record
   def save()
     @dirty_keys.uniq!
     @delete_keys.uniq!
