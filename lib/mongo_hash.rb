@@ -136,7 +136,9 @@ class MongoHash < Hash
   def save()
     @dirty_keys.uniq!
     @delete_keys.uniq!
-    return nil if @dirty_keys.length == 0 and @delete_keys.length == 0
+    if @subkey == ""
+      return nil if @dirty_keys.length == 0 and @delete_keys.length == 0
+    end
 
     if @new_record == true
       self['created_at'] = Time.now.to_i
