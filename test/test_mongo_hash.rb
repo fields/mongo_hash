@@ -17,7 +17,7 @@ class TestMongoHash < MiniTest::Unit::TestCase
   # mongohash save modified record with subkey
 
   def setup
-    db = Mongo::Connection.new('localhost').db('mongo_hash_test', :safe => true)
+    db = Mongo::MongoClient.new('localhost').db('mongo_hash_test', :safe => true)
     @collection = db.collection('test')
     @collection.drop
   end

@@ -11,7 +11,7 @@ Basic usage is simple:
 
 	require 'mongo'
 	require 'mongo_hash'
-	db = Mongo::Connection.new('localhost').db('mongo_hash_test', :safe => true)
+	db = Mongo::MongoClient.new('localhost').db('mongo_hash_test', :safe => true)
     @collection = db.collection('test')
 	mh = MongoHash.new(@collection)
 	
