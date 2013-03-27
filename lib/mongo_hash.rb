@@ -121,7 +121,7 @@ class MongoHash < Hash
   
   def destroy()
     unless @new_record == true
-      retval = @collection.remove({'_id' => self._id}, :safe => true)
+      retval = @collection.remove({'_id' => self._id}, :w => 1)
       @new_record = true
       self._id = nil
       ## maybe some other things
@@ -142,7 +142,7 @@ class MongoHash < Hash
 
     if @new_record == true
       self['created_at'] = Time.now.to_i
-      id = @collection.insert(self, :safe => true)
+      id = @collection.insert(self, :w => 1)
       self._id = id
       self.delete(:_id, false)
       @new_record = false
@@ -157,14 +157,14 @@ class MongoHash < Hash
           @dirty_keys.map{|key| update_hash[key] = self[key]}
           delete_hash = {}
           @delete_keys.map{|key| delete_hash[key] = 1}
-          @collection.update({'_id' => self._id}, {'$unset' => delete_hash, '$set' => update_hash }, :safe => true)           
+          @collection.update({'_id' => self._id}, {'$unset' => delete_hash, '$set' => update_hash }, :w => 1)           
           
           retval = true
         else
-          retval = @collection.update({'_id' => self._id}, self, :safe => true)
+          retval = @collection.update({'_id' => self._id}, self, :w => 1)
         end
       else
-        retval = @collection.update({'_id' => self._id}, {'$set' => {@subkey => self[@subkey]} }, :safe => true)
+        retval = @collection.update({'_id' => self._id}, {'$set' => {@subkey => self[@subkey]} }, :w => 1)
       end
     end
     @delete_keys = []

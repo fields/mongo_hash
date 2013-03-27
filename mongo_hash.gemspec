@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'mongo_hash'
-  s.version     = '0.1.2'
+  s.version     = '0.1.3'
   s.date        = '2013-03-19'
   s.summary     = "MongoHash"
   s.description = "A simple front-end for mongodb persistence for ruby hashes"
